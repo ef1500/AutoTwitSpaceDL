@@ -7,6 +7,7 @@ import requests
 
 def GenerateEmbed(Url, content, Title, Desc, Name, IconUrl, user):
     data = {"content":content, "username": user[20:]}
+    # We Have to add the [20:] There because in the main file we added https://twitter.com/ to the front of the username, so we're just removing that. 
 
     data["embeds"] = [
         {
