@@ -4,15 +4,16 @@
 import os
 import re
 import json
+import time
 import glob
 import requests
 import subprocess
 import DiscordNotifEngine
-
+import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
 
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
-NOTIF_URL = "WEBHOOK_URL" # Discord Webhook url for the notification
+NOTIF_URL = "Your Webhook URL" # Discord Webhook url for the notification
 
 # First we want to be able to read a file that contains all of the
 # Users that we would like to monitor for a twitter space. We can do this with the help of a text file
@@ -29,29 +30,31 @@ def LoadData(file):
 # When that user is no longer live, begin uploading the file to a temporary storage site
 # Once completed, Return the link via webhook (This should be replaced by the autoTorrent program to autoUpload to Holopirates)
 
-def CheckLive(user, path):
+def CheckLive(user):
+    ustr = user[20:]
     # Here we want to create a function that checks if the specified user is live
     # If they are live, send a discord notification, if not, then check again
-    checkLive = subprocess.Popen("twspace_dl -U "+user+" --write-url urls.txt -s", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
-    ox, ex = checkLive.communicate()
-    checkLive.wait() #Wait for the process to end
-    # Now check to see if there is a urls.txt file in the folder that contains the url
-    isFile = os.path.isfile(path+'/'+'urls.txt')
-    if isFile == True:
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, "", "Ongoing Space", "Now archiving... Will be uploaded momentarily", "Twitter Space Notification System", "https://imgur.com/E2vh4aa.png", user)
-        os.remove(path+'/'+'urls.txt') #Now delete the file
+    # Update: Since I rethought the mechanism for this, the underlying process is located in the AutoSpaceHandler
+    UserID = Yuzu.GetUserID(user)
+    isLive = Yuzu.CheckIfLive(UserID)
+    if isLive == True:
+        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is now hosting a twitter space!", "Space will be uploaded momentarily", ustr, 'https://i.imgur.com/nGQWo3C.png', ustr)
         return True
+    else:
+        pass
 
 def Monitor(user, path):
-    isLive = CheckLive(user,path)
+    isLive = CheckLive(user)
     # Open A Subprocess to begin the downloading process
     if isLive == True:
-        monitor = subprocess.Popen("twspace_dl -o [%(creator_name)s%(id)s]-%(title)s -U "+user, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path) #Open the process in the specific directory so that way we don't have any interference when uploading to tempupload.
+        monitor = subprocess.Popen("twspace_dl -o [%(creator_screen_name)s%(id)s]-%(start_date)s -U "+user, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path) #Open the process in the specific directory so that way we don't have any interference when uploading to tempupload.
         # Small note - We have to make the twsapce filename weird because if there's hangul, sometimes windows will throw an error and then the downloader will fail to pull through. I've got no idea how to fix this
         # Put the output and error in their own variables (Communicate returns two values.)
         ox, ex = monitor.communicate()
-
-        AutoUpload(path, user) # Begin The Autoupload process
+        try:
+            AutoUpload(path, user) # Begin The Autoupload process
+        except:
+            pass
 
 # Now to create the function that automatically uploads the most recent file in the folder to the tempupload service
 # Let's start by making the function that finds the most recent file in a folder
@@ -76,4 +79,4 @@ def AutoUpload(path, user):
         u = urlReg.search(str(oy))
         ux = str(u.group())
         # Notify Via Discord
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, ux[:-6], "Space us Uploaded!", "Finished Archiving!", "Mizusawa Alert System", "https://imgur.com/nGQWo3C.png", user)
+        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, ux[:-6], "Space is Uploaded!", "Finished Archiving!", "Mizusawa Alert System", "https://imgur.com/nGQWo3C.png", user)
