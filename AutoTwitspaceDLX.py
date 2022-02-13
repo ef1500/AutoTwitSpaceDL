@@ -14,7 +14,7 @@ import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
 NOTIF_URL = "Your Webhook URL" # Discord Webhook url for the notification
-INTERVAL = 3 # The interval for the monitor to sleep (In Seconds)
+INTERVAL = 60 # The interval for the monitor to sleep (In Seconds)
 
 # First we want to be able to read a file that contains all of the
 # Users that we would like to monitor for a twitter space. We can do this with the help of a text file
@@ -32,25 +32,34 @@ def LoadData(file):
 # When that user is no longer live, begin uploading the file to a temporary storage site
 # Once completed, Return the link via webhook (This should be replaced by the autoTorrent program to autoUpload to Holopirates)
 
-def CheckLive(user):
+
+
+def CheckLive(user, user_id):
     ustr = user[20:]
     # Here we want to create a function that checks if the specified user is live
     # If they are live, send a discord notification, if not, then check again
     # Update: Since I rethought the mechanism for this, the underlying process is located in the AutoSpaceHandler
-    UserID = Yuzu.GetUserID(user)
-    isLive = Yuzu.CheckIfLive(UserID)
+    # Update 2: Twitter didn't like me generating guest tokens every 3 seconds so I started getting a rate limit of sorts, so I'll move the
+    # function below and change the args on this function.
+    isSpace = Yuzu.CheckIfSpace(user_id)
+    isLive = Yuzu.CheckIfLive(isSpace)
     if isLive == True:
         DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is now hosting a twitter space!", "Space will be uploaded momentarily", ustr, 'https://imgur.com/E2vh4aa.png', ustr)
         return True
     else:
-        pass
+        return False
 
 def Monitor(user, path):
-    isLive = CheckLive(user) # Initial Check to define the variable
+    UserID = lambda user : Yuzu.GetUserID(user) # Slap the old function in a lambda, it's nicer that way! And now we're not calling this function
+    # Every three seconds.
+    # Update here: even if you try the program after editing it, you'll still get the keyerror. I just hopped on a vpn and the issue went away.
+    # Should only be temporary
+
+    isLive = CheckLive(user, UserID(user)) # Initial Check to define the variable
 
      # Now we begin writing the actual monitor of the program
     while isLive != True:
-        isLive = CheckLive(user) # Check if the user is live (as always)
+        isLive = CheckLive(user, UserID) # Check if the user is live (as always)
         time.sleep(INTERVAL) # Now Just sleep for the specified interval before doing it again. (Should I use async here because I'm working with threads?)
 
     if isLive == True:
@@ -63,6 +72,7 @@ def Monitor(user, path):
             AutoUpload(path, user) # Begin The Autoupload process
         except:
             pass
+
 
 # Now to create the function that automatically uploads the most recent file in the folder to the tempupload service
 # Let's start by making the function that finds the most recent file in a folder

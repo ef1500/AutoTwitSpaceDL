@@ -7,7 +7,7 @@ import requests
 
 #Generate an embed 
 def GenerateEmbed(Url, content, Title, Desc, Name, IconUrl, user):
-    data = {"content":content, "username": user[20:]}
+    data = {"content":content, "username": user}
 
     data["embeds"] = [
         {
