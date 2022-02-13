@@ -14,10 +14,12 @@ import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
 NOTIF_URL = "Your Webhook URL" # Discord Webhook url for the notification
+INTERVAL = 3 # The interval for the monitor to sleep (In Seconds)
 
 # First we want to be able to read a file that contains all of the
 # Users that we would like to monitor for a twitter space. We can do this with the help of a text file
 # This will also save us time when we are preparing for the discord integration to send an embed.
+# Make sure that your config file is in the same place where all of your spaces are going to be downloaded.
 
 def LoadData(file):
     with open(file, 'r') as f:
@@ -38,16 +40,22 @@ def CheckLive(user):
     UserID = Yuzu.GetUserID(user)
     isLive = Yuzu.CheckIfLive(UserID)
     if isLive == True:
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is now hosting a twitter space!", "Space will be uploaded momentarily", ustr, 'https://i.imgur.com/nGQWo3C.png', ustr)
+        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is now hosting a twitter space!", "Space will be uploaded momentarily", ustr, 'https://imgur.com/E2vh4aa.png', ustr)
         return True
     else:
         pass
 
 def Monitor(user, path):
-    isLive = CheckLive(user)
-    # Open A Subprocess to begin the downloading process
+    isLive = CheckLive(user) # Initial Check to define the variable
+
+     # Now we begin writing the actual monitor of the program
+    while isLive != True:
+        isLive = CheckLive(user) # Check if the user is live (as always)
+        time.sleep(INTERVAL) # Now Just sleep for the specified interval before doing it again. (Should I use async here because I'm working with threads?)
+
     if isLive == True:
-        monitor = subprocess.Popen("twspace_dl -o [%(creator_screen_name)s%(id)s]-%(start_date)s -U "+user, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path) #Open the process in the specific directory so that way we don't have any interference when uploading to tempupload.
+        # Open A Subprocess to begin the downloading process
+        monitor = subprocess.Popen("twspace_dl -o [%(creator_screen_name)s_%(id)s]-%(start_date)s -U "+user, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path) #Open the process in the specific directory so that way we don't have any interference when uploading to tempupload.
         # Small note - We have to make the twsapce filename weird because if there's hangul, sometimes windows will throw an error and then the downloader will fail to pull through. I've got no idea how to fix this
         # Put the output and error in their own variables (Communicate returns two values.)
         ox, ex = monitor.communicate()
@@ -72,7 +80,6 @@ def AutoUpload(path, user):
     upload = subprocess.Popen("transfersh "+str(file), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
     oy, ey = upload.communicate()
     upload.wait()
-    print(oy, ey)
     if not ey:
         # Regex The link out
         urlReg = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')

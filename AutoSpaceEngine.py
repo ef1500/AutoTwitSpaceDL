@@ -21,8 +21,7 @@ def BeginMonitor(user):
     AutoTwitspaceDLX.Monitor(ustr, BASE_PATH+str(user))
 
 if __name__=="__main__":
-    # I don't actually have a clue how to make a monitor that would run in the background, restarting
-    # Whenever a twitter space ends, so until I figure that out, this will have to do.
+    # I got the monitoring up and running. It works now!
     Users = AutoTwitspaceDLX.LoadData(BASE_PATH+'config.txt')
     MakeDirs(Users)
     ThreadLog = list()
