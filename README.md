@@ -2,9 +2,9 @@
 Automatic Twitter Space Downloader and Uploader with Discord integration
 
 # What it does
-- Will (Hopefully soon) Monitor a list of twitter users continously for twitter spaces
-- Notify you via discord webhook
-- Upload a temporary archive of the twitter space to transfer.sh so you can share it with friends
+- Monitors A list of users for Twitter Spaces
+- Notifies you via discord webhook
+- Uploads a temporary archive of the twitter space to transfer.sh so you can share it with friends
 
 It's not the best, but I'm working to make it the best I can.
 
