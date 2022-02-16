@@ -24,20 +24,20 @@ def GetUserID(user):
 # If you want to monitor new spaces.
 # However, we can make use of this! It's not entirely pointless. We can use this to check if there's a space, and then we can return the link 
 # of the onging space so we can hand it over to a function that will check if the twitter space is still ongoing or not. 
-def CheckIfSpace(user_id):
+def CheckIfSpace(user_id, token):
     headers = {
         "authorization": (
         "Bearer "
         "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs"
         "=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
         ),
-        "x-guest-token": getGuest(),
+        "x-guest-token": token, # I think that this is where our error stems from. I think that if we stop generating tokens all the time and make this a one-time process, it will work flawlessly.
     }
     params = {
         "variables": (
             "{"
             f'"userId":"{user_id}",'
-            '"count":20,'
+            '"count":1,' # We can look at the most recent tweet every second, as if we're monitoring every second, we're allowed 900 requests per 15 minutes. This should eliminate the guest token error. Update: That didn't solve anything.
             '"withTweetQuoteCount":true,'
             '"includePromotedContent":true,'
             '"withQuickPromoteEligibilityTweetFields":false,'
@@ -61,11 +61,12 @@ def CheckIfSpace(user_id):
         space_id = re.findall(r"(?<=https://twitter.com/i/spaces/)\w*", tweets)[0]
         return space_id
     except (IndexError, json.JSONDecodeError) as err:
-        return None # Is this a bad idea? We'll see I guess lol
+        return False # Is this a bad idea? We'll see I guess lol 
+    # Update: Changed from None to False. Could be the stem of my issue.
 
 # Now we need to make a checker that will rapidly check to see if the space is live or not so that way we can 
 # Start the recording process.
-def CheckIfLive(space_id):
+def CheckIfLive(space_id, token):
     params = {
         "variables": (
             "{"
@@ -89,7 +90,7 @@ def CheckIfLive(space_id):
             "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs"
             "=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
             ),
-            "x-guest-token": getGuest(),
+            "x-guest-token": token, #edit here too
     }
     response = requests.get("https://twitter.com/i/api/graphql/jyQ0_DEMZHeoluCgHJ-U5Q/AudioSpaceById",params=params, headers=headers)
 

@@ -7,20 +7,21 @@ import requests
 
 #Generate an embed 
 def GenerateEmbed(Url, content, Title, Desc, Name, IconUrl, user):
-    data = {"content":content, "username": user}
+    data = {"content":content, "username": user} 
+    # Content is an actual message, not in the embed, and the username is the username of the webhook
 
     data["embeds"] = [
         {
-            "title": Title,
-            "description": Desc,
+            "title": Title, # Embed Title
+            "description": Desc, # Description of the embed (Put the text you want in the embed here)
             "author": {
-                "name": Name,
-                "icon_url": IconUrl
+                "name": Name, # The Author Name 
+                "icon_url": IconUrl # The Url of the author icon
         },
-            "color": 15406156,
+            "color": 15406156, # Color of the embed
             "footer": {
-                "text": "Powered by ef1500",
-                "icon_url": "https://imgur.com/nGQWo3C.png"
+                "text": "Powered by ef1500", # Footer Text
+                "icon_url": "https://imgur.com/nGQWo3C.png" # Footer Icon
                 }
             }
         ]

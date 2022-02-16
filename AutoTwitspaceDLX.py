@@ -14,7 +14,7 @@ import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
 NOTIF_URL = "Your Webhook URL" # Discord Webhook url for the notification
-INTERVAL = 60 # The interval for the monitor to sleep (In Seconds)
+INTERVAL = 7 # The interval for the monitor to sleep (In Seconds)
 
 # First we want to be able to read a file that contains all of the
 # Users that we would like to monitor for a twitter space. We can do this with the help of a text file
@@ -24,6 +24,7 @@ INTERVAL = 60 # The interval for the monitor to sleep (In Seconds)
 def LoadData(file):
     with open(file, 'r') as f:
         data = [line.strip() for line in f]
+    f.close()
     return data
 
 # Great. Now we've got our little "Mini" Data Loader Ready, now lets begin monitoring for a twitter space.
@@ -34,32 +35,32 @@ def LoadData(file):
 
 
 
-def CheckLive(user, user_id):
+def CheckLive(user, user_id, token):
     ustr = user[20:]
     # Here we want to create a function that checks if the specified user is live
     # If they are live, send a discord notification, if not, then check again
     # Update: Since I rethought the mechanism for this, the underlying process is located in the AutoSpaceHandler
     # Update 2: Twitter didn't like me generating guest tokens every 3 seconds so I started getting a rate limit of sorts, so I'll move the
     # function below and change the args on this function.
-    isSpace = Yuzu.CheckIfSpace(user_id)
-    isLive = Yuzu.CheckIfLive(isSpace)
+    isSpace = Yuzu.CheckIfSpace(user_id, token)
+    isLive = Yuzu.CheckIfLive(isSpace, token)
     if isLive == True:
         DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is now hosting a twitter space!", "Space will be uploaded momentarily", ustr, 'https://imgur.com/E2vh4aa.png', ustr)
+        print(str(user[20:]+" Is live"))
         return True
     else:
         return False
 
 def Monitor(user, path):
-    UserID = lambda user : Yuzu.GetUserID(user) # Slap the old function in a lambda, it's nicer that way! And now we're not calling this function
-    # Every three seconds.
-    # Update here: even if you try the program after editing it, you'll still get the keyerror. I just hopped on a vpn and the issue went away.
-    # Should only be temporary
+    token = Yuzu.getGuest() # Let's change this so it's now only a one-time process and it's not called all the time.
 
-    isLive = CheckLive(user, UserID(user)) # Initial Check to define the variable
+    UserID = lambda user : Yuzu.GetUserID(user) # Slap the old function in a lambda, it's nicer that way!
+
+    isLive = CheckLive(user, UserID, token) # Initial Check to define the variable
 
      # Now we begin writing the actual monitor of the program
     while isLive != True:
-        isLive = CheckLive(user, UserID) # Check if the user is live (as always)
+        isLive = CheckLive(user, UserID, token) # Check if the user is live (as always)
         time.sleep(INTERVAL) # Now Just sleep for the specified interval before doing it again. (Should I use async here because I'm working with threads?)
 
     if isLive == True:
@@ -96,4 +97,4 @@ def AutoUpload(path, user):
         u = urlReg.search(str(oy))
         ux = str(u.group())
         # Notify Via Discord
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, ux[:-6], "Space is Uploaded!", "Finished Archiving!", "Mizusawa Alert System", "https://imgur.com/nGQWo3C.png", user)
+        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, ux[:-6], "Space is Uploaded!", "Finished Archiving!", "Mizusawa Alert System", "https://imgur.com/nGQWo3C.png", user[20:])
