@@ -56,11 +56,11 @@ def Monitor(user, path):
 
     UserID = lambda user : Yuzu.GetUserID(user) # Slap the old function in a lambda, it's nicer that way!
 
-    isLive = CheckLive(user, UserID, token) # Initial Check to define the variable
+    isLive = CheckLive(user, UserID(user), token) # Initial Check to define the variable
 
      # Now we begin writing the actual monitor of the program
     while isLive != True:
-        isLive = CheckLive(user, UserID, token) # Check if the user is live (as always)
+        isLive = CheckLive(user, UserID(user), token) # Check if the user is live (as always)
         time.sleep(INTERVAL) # Now Just sleep for the specified interval before doing it again. (Should I use async here because I'm working with threads?)
 
     if isLive == True:
