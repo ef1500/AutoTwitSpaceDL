@@ -6,12 +6,17 @@ Automatic Twitter Space Downloader and Uploader with Discord integration
 - Notifies you via discord webhook
 - Uploads a temporary archive of the twitter space to transfer.sh so you can share it with friends
 
+An example of the program in action is shown below
+
+![Example Space Archive](https://imgur.com/YqjSrdV.png)
+
 It's not the best, but I'm working to make it the best I can.
 
 # Setting up
 ## What you'll need
 - Discord webhook url
 - Folder for all of the twitter spaces to be downloaded to
+
 ## Preparing a config
 The config file is really simple, all you have to do is create a file titled config.txt in the folder you want all of the spaces to be downloaded and put the usernames of the users you would like to monitor. I've provided a small example.
 
@@ -47,6 +52,10 @@ python3 AutoSpaceEngine.py
 The program will now begin the monitoring and upload process. 
 
 IMPORTANT NOTE: Ctrl+C will not stop this program. You either click the x button or exit via task manager.
+
+## Customizing the embed
+In the file "DiscordNotifEngine.py", the arguments for the embed are explained so that you can edit the embed.
+The function is called in AutoTwitspaceDLX.py on lines 48 and 100.
 
 
 # TODO
