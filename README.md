@@ -61,4 +61,6 @@ The function is called in AutoTwitspaceDLX.py on lines 48 and 100.
 # TODO
 - Also allow for the option to automatically create torrents and upload them to mogu.holopirates.moe in addition (or not) to the tempupload feature
 - Allow for the Customization of the Author/Footer images and footer text
+- More detailed embeds (With the url embedded!)
+- Multiple Webhook support (maybe)
 - Make a nice looking cli (Maybe)
