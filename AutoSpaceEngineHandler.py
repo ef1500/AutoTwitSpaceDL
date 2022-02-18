@@ -1,11 +1,9 @@
 # Twitter Space Automatic Downloader/Monitor Rewrite
 # Written by ef1500
-# The old one wasn't working and I was getting frustrated with it, so I've decided to wrtite the Whole Damn thing myself, with the help of others. 
+# The old one wasn't working and I was getting frustrated with it, so I've decided to wrtite the Whole Damn thing myself, with the help of others.
 import re
 import json
-import random # For anti-ratelimit
 import requests
-import AutoTwitspaceDLX as Shizuku
 
 # Grab a guest token for usage on the twitter api
 def getGuest():
@@ -15,7 +13,7 @@ def getGuest():
 
 
 # Modify Ryu's TwSpaceDL user ID grabber so we can rapidly check a user's ID
-# Update: That no worky :( 
+# Update: That no worky :(
 def user_id(user_url):
     screen_name = re.findall(r"(?<=twitter.com/)\w*", user_url)[0]
 
@@ -37,10 +35,10 @@ def user_id(user_url):
         ),
         "x-guest-token": getGuest(),
     }
-    
-    
+
+
     response = requests.get("https://twitter.com/i/api/graphql/1CL-tn62bpc-zqeQrWm4Kw/UserByScreenName",headers=headers, params=params,)
-    
+
     user_data = response.json()
     user_id = user_data["data"]["user"]["result"]["rest_id"]
     return user_id
@@ -50,10 +48,10 @@ def GetUserID(user):
     UserID = user_id(user)
     return UserID
 
-# Small Note - I just realized that this will find any and all spaces on that account, so if one is ongoing, then you're straight outta luck 
+# Small Note - I just realized that this will find any and all spaces on that account, so if one is ongoing, then you're straight outta luck
 # If you want to monitor new spaces.
-# However, we can make use of this! It's not entirely pointless. We can use this to check if there's a space, and then we can return the link 
-# of the onging space so we can hand it over to a function that will check if the twitter space is still ongoing or not. 
+# However, we can make use of this! It's not entirely pointless. We can use this to check if there's a space, and then we can return the link
+# of the onging space so we can hand it over to a function that will check if the twitter space is still ongoing or not.
 def CheckIfSpace(user_id, token):
     headers = {
         "authorization": (
@@ -91,10 +89,10 @@ def CheckIfSpace(user_id, token):
         space_id = re.findall(r"(?<=https://twitter.com/i/spaces/)\w*", tweets)[0]
         return space_id
     except (IndexError, json.JSONDecodeError) as err:
-        return False # Is this a bad idea? We'll see I guess lol 
+        return False # Is this a bad idea? We'll see I guess lol
     # Update: Changed from None to False. Could be the stem of my issue.
 
-# Now we need to make a checker that will rapidly check to see if the space is live or not so that way we can 
+# Now we need to make a checker that will rapidly check to see if the space is live or not so that way we can
 # Start the recording process.
 def CheckIfLive(space_id, token):
     params = {
