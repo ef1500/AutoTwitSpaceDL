@@ -13,8 +13,8 @@ import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
 
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
-NOTIF_URL = "Your Webhook URL" # Discord Webhook url for the notification
-INTERVAL = 7 # The interval for the monitor to sleep (In Seconds)
+NOTIF_URL = "Your Webhook Url" # Discord Webhook url for the notification
+INTERVAL = 45 # The interval for the monitor to sleep (In Seconds)
 
 # First we want to be able to read a file that contains all of the
 # Users that we would like to monitor for a twitter space. We can do this with the help of a text file
@@ -44,18 +44,27 @@ def CheckLive(user, user_id, token):
     # function below and change the args on this function.
     isSpace = Yuzu.CheckIfSpace(user_id, token)
     isLive = Yuzu.CheckIfLive(isSpace, token)
+
     if isLive == True:
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is now hosting a twitter space!", "Space will be uploaded momentarily", ustr, 'https://imgur.com/E2vh4aa.png', ustr)
-        print(str(user[20:]+" Is live"))
+        spaceInfo = Yuzu.getSpaceInfo(isSpace, token) # Get the information about the twitter space
+
+        #Strings for the embed
+        spaceUrl = "**Space Url:** " + '\n' + 'https://twitter.com/i/spaces/' + spaceInfo[1] + '\n' + '\n'
+        spaceTitleStr = "**Space Title:** " + '\n' + str(spaceInfo[0]) + '\n' + '\n'
+        spaceIDstr = "**Space ID:**" + '\n' + str(spaceInfo[1]) + '\n'
+
+        #Join all of the strings
+        des = ''.join(spaceTitleStr + spaceUrl + spaceIDstr)
+
+        # Now generate the notification
+        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is hosting a twitter space!", des, ustr, 'https://imgur.com/E2vh4aa.png', ustr)
         return True
     else:
         return False
 
 def Monitor(user, path):
     token = Yuzu.getGuest() # Let's change this so it's now only a one-time process and it's not called all the time.
-
     UserID = lambda user : Yuzu.GetUserID(user) # Slap the old function in a lambda, it's nicer that way!
-
     isLive = CheckLive(user, UserID(user), token) # Initial Check to define the variable
 
      # Now we begin writing the actual monitor of the program

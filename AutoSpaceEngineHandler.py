@@ -3,21 +3,51 @@
 # The old one wasn't working and I was getting frustrated with it, so I've decided to wrtite the Whole Damn thing myself, with the help of others. 
 import re
 import json
+import random # For anti-ratelimit
 import requests
-import twspace_dl
+import AutoTwitspaceDLX as Shizuku
 
 # Grab a guest token for usage on the twitter api
 def getGuest():
     guestActivate = 'https://api.twitter.com/1.1/guest/activate.json'
-
-    res = requests.post(guestActivate, headers={
-                        'Authorization': 'Bearer ' + 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'})
-
+    res = requests.post(guestActivate, headers={'Authorization': 'Bearer ' + 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'})
     return res.json()['guest_token']
+
+
+# Modify Ryu's TwSpaceDL user ID grabber so we can rapidly check a user's ID
+# Update: That no worky :( 
+def user_id(user_url):
+    screen_name = re.findall(r"(?<=twitter.com/)\w*", user_url)[0]
+
+    params = {
+        "variables": (
+            "{"
+            f'"screen_name":"{screen_name}",'
+            '"withSafetyModeUserFields":true,'
+            '"withSuperFollowsUserFields":true,'
+            '"withNftAvatar":false'
+            "}"
+        )
+    }
+    headers = {
+        "authorization": (
+            "Bearer "
+            "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs"
+            "=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ),
+        "x-guest-token": getGuest(),
+    }
+    
+    
+    response = requests.get("https://twitter.com/i/api/graphql/1CL-tn62bpc-zqeQrWm4Kw/UserByScreenName",headers=headers, params=params,)
+    
+    user_data = response.json()
+    user_id = user_data["data"]["user"]["result"]["rest_id"]
+    return user_id
 
 # Get the user ID so we can pass it on and check if the user is live
 def GetUserID(user):
-    UserID = twspace_dl.TwspaceDL.user_id(user)
+    UserID = user_id(user)
     return UserID
 
 # Small Note - I just realized that this will find any and all spaces on that account, so if one is ongoing, then you're straight outta luck 
@@ -37,9 +67,9 @@ def CheckIfSpace(user_id, token):
         "variables": (
             "{"
             f'"userId":"{user_id}",'
-            '"count":1,' # We can look at the most recent tweet every second, as if we're monitoring every second, we're allowed 900 requests per 15 minutes. This should eliminate the guest token error. Update: That didn't solve anything.
-            '"withTweetQuoteCount":true,'
-            '"includePromotedContent":true,'
+            '"count": 5,' # We can look at the most recent tweet every second, as if we're monitoring every second, we're allowed 900 requests per 15 minutes. This should eliminate the guest token error. Update: That didn't solve anything.
+            '"withTweetQuoteCount":false,' # Stop quote tweets from plauging our query
+            '"includePromotedContent":false,' # Who wants that garbage?
             '"withQuickPromoteEligibilityTweetFields":false,'
             '"withSuperFollowsUserFields":true,'
             '"withUserResults":true,'
@@ -105,3 +135,41 @@ def CheckIfLive(space_id, token):
             return True
     except KeyError:
         return False
+
+def getSpaceInfo(space_id, token):
+    params = {
+        "variables": (
+            "{"
+            f'"id":"{space_id}",'
+            '"isMetatagsQuery":false,'
+            '"withSuperFollowsUserFields":true,'
+            '"withUserResults":true,'
+            '"withBirdwatchPivots":false,'
+            '"withReactionsMetadata":false,'
+            '"withReactionsPerspective":false,'
+            '"withSuperFollowsTweetFields":true,'
+            '"withReplays":true,'
+            '"withScheduledSpaces":true'
+            "}"
+            )
+    }
+
+    headers = {
+        "authorization": (
+            "Bearer "
+            "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs"
+            "=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+            ),
+            "x-guest-token": token, #edit here too
+    }
+    response = requests.get("https://twitter.com/i/api/graphql/jyQ0_DEMZHeoluCgHJ-U5Q/AudioSpaceById",params=params, headers=headers)
+
+    meta = response.json()
+
+    try:
+        title = meta["data"]["audioSpace"]["metadata"]["title"] # Get the title for the embed
+    except KeyError:
+        title = "None Provided"
+    rest_id = meta["data"]["audioSpace"]["metadata"]["rest_id"] # Get the Space ID while we're at it too
+
+    return title, rest_id
