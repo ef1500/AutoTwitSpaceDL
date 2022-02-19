@@ -8,7 +8,7 @@ Automatic Twitter Space Downloader and Uploader with Discord integration
 
 An example of the program in action is shown below
 
-![Example Space Archive](https://imgur.com/YqjSrdV.png)
+![Example Space Archive](https://imgur.com/clrnIND.png)
 
 It's not the best, but I'm working to make it the best I can.
 
