@@ -17,7 +17,6 @@ def getGuest():
 @mei.lru_cache(maxsize=128)
 def GetUserID(user):
     UserID = Shizuku.twspace_dl.TwspaceDL.user_id(user)
-    print("I'm Getting the id for " + user)
     return UserID
 
 # Small Note - I just realized that this will find any and all spaces on that account, so if one is ongoing, then you're straight outta luck 
