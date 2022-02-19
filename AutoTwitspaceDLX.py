@@ -14,7 +14,7 @@ import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
 NOTIF_URL = "Your Webhook Url" # Discord Webhook url for the notification
-INTERVAL = 45 # The interval for the monitor to sleep (In Seconds)
+INTERVAL = 5 # The interval for the monitor to sleep (In Seconds)
 
 # First we want to be able to read a file that contains all of the
 # Users that we would like to monitor for a twitter space. We can do this with the help of a text file
@@ -105,5 +105,15 @@ def AutoUpload(path, user):
         urlReg = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
         u = urlReg.search(str(oy))
         ux = str(u.group())
+
+        # Create Strings for the embed
+        uploadUrl = ux[:-6]
+        up_user = user[20:]
+
+        # Define some extra strings and then  construct the embed
+        upStr = "**Upload URL:**" + '\n' + uploadUrl + '\n' + '\n'
+        noteStr = "*Note: All links will expire after 300 hours*" + '\n'
+        des = ''.join(upStr + noteStr)
+
         # Notify Via Discord
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, ux[:-6], "Space is Uploaded!", "Finished Archiving!", "Mizusawa Alert System", "https://imgur.com/nGQWo3C.png", user[20:])
+        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", up_user + "'s Twitter Space is Ready for download", des, up_user, "https://imgur.com/nGQWo3C.png", user[20:])
