@@ -28,7 +28,7 @@ You can add a '$' to add comments if you'd like.
 ## Adding your path to the code
 - Copy the path of your spaces folder
 - Next, navigate to the location you cloned the repo
-- Open the files "AutoSpaceEngine.py" and "AutoSpaceEngineHandler.py" and edit the BASE_PATH string to your desired path. (Please note it must end with a slash!)
+- Open the files "AutoSpaceEngine.py" and "AutoTwitspaceDLX.py" and edit the BASE_PATH string to your desired path. (Please note it must end with a slash!)
 
 Do not worry about the folders shown in the example, they will be created for you automatically ;)
 
