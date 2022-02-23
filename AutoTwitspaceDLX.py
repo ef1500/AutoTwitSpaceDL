@@ -1,6 +1,7 @@
 # Written by ef1500
 # Automatic Twitter Space Downloader
 
+# Normal Imports
 import os
 import re
 import json
@@ -9,7 +10,10 @@ import glob
 import requests
 import subprocess
 import DiscordNotifEngine
+import AutoSpaceEngine
+import AuthEngine as kronii
 import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
+
 
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
@@ -23,7 +27,7 @@ INTERVAL = 5 # The interval for the monitor to sleep (In Seconds)
 
 def LoadData(file):
     with open(file, 'r') as f:
-        data = [line.strip() for line in f]
+        data = [line.strip() for line in f if not (line.startswith('$') or line.startswith('\n'))] # Use $ As a comment, so it's a bit more detailed (if you want)
     f.close()
     return data
 
@@ -43,6 +47,33 @@ def CheckLive(user, user_id, token):
     # Update 2: Twitter didn't like me generating guest tokens every 3 seconds so I started getting a rate limit of sorts, so I'll move the
     # function below and change the args on this function.
     isSpace = Yuzu.CheckIfSpace(user_id, token)
+    if isSpace == False:
+        return False # Stop here to conserve token requests
+    isLive = Yuzu.CheckIfLive(isSpace, token)
+
+    if isLive == True:
+        spaceInfo = Yuzu.getSpaceInfo(isSpace, token) # Get the information about the twitter space
+
+        #Strings for the embed
+        spaceUrl = "**Space Url:** " + '\n' + 'https://twitter.com/i/spaces/' + spaceInfo[1] + '\n' + '\n'
+        spaceTitleStr = "**Space Title:** " + '\n' + str(spaceInfo[0]) + '\n' + '\n'
+        spaceIDstr = "**Space ID:**" + '\n' + str(spaceInfo[1]) + '\n'
+
+        #Join all of the strings
+        des = ''.join(spaceTitleStr + spaceUrl + spaceIDstr)
+
+        # Now generate the notification
+        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is hosting a twitter space!", des, ustr, 'https://imgur.com/E2vh4aa.png', ustr)
+        return True
+    else:
+        return False
+
+# Check if a user is live from their avatar (Requires auth token)
+def CheckLive_Avatar(user, user_id, token):
+    ustr = user[20:]
+    isSpace = Yuzu.isSpace_avatar(user, user_id, kronii.GetToken(kronii.LoadTokens(BASE_PATH+'tokens.txt')))
+    if isSpace == False:
+        return False
     isLive = Yuzu.CheckIfLive(isSpace, token)
 
     if isLive == True:
@@ -70,6 +101,8 @@ def Monitor(user, path):
      # Now we begin writing the actual monitor of the program
     while isLive != True:
         isLive = CheckLive(user, UserID(user), token) # Check if the user is live (as always)
+        if isLive == False:
+            isLive = CheckLive_Avatar(user, UserID, token)
         time.sleep(INTERVAL) # Now Just sleep for the specified interval before doing it again. (Should I use async here because I'm working with threads?)
 
     if isLive == True:
@@ -93,6 +126,7 @@ def FindLatest(path, user):
 
 #Autoupload function
 def AutoUpload(path, user):
+    print("Upload started!")
     # Find the latest file in the folder
     file = FindLatest(path, user)
 

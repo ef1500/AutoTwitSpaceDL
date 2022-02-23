@@ -3,21 +3,28 @@
 # The old one wasn't working and I was getting frustrated with it, so I've decided to wrtite the Whole Damn thing myself, with the help of others. 
 import re
 import json
+import time
 import requests
 import functools as mei
 import twspace_dl as Shizuku
+import AutoTwitspaceDLX as Yuu
 
 # Grab a guest token for usage on the twitter api
+@mei.lru_cache
 def getGuest():
     guestActivate = 'https://api.twitter.com/1.1/guest/activate.json'
     res = requests.post(guestActivate, headers={'Authorization': 'Bearer ' + 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'})
     return res.json()['guest_token']
 
 # Get the user ID so we can pass it on and check if the user is live
-@mei.lru_cache(maxsize=128)
+@mei.lru_cache
 def GetUserID(user):
-    UserID = Shizuku.twspace_dl.TwspaceDL.user_id(user)
-    return UserID
+    try:
+        UserID = Shizuku.twspace_dl.TwspaceDL.user_id(user)
+        return UserID #return UserID
+    except KeyError:
+        print("KeyError with " + user)
+        return None
 
 # Small Note - I just realized that this will find any and all spaces on that account, so if one is ongoing, then you're straight outta luck 
 # If you want to monitor new spaces.
@@ -60,8 +67,12 @@ def CheckIfSpace(user_id, token):
         space_id = re.findall(r"(?<=https://twitter.com/i/spaces/)\w*", tweets)[0]
         return space_id
     except (IndexError, json.JSONDecodeError) as err:
-        return False # Is this a bad idea? We'll see I guess lol 
-    # Update: Changed from None to False. Could be the stem of my issue.
+        return False
+        #return False # Is this a bad idea? We'll see I guess lol 
+        # Update: Changed from None to False. Could be the stem of my issue.
+    except requests.exceptions.ConnectionError as er:
+        return 238491 # I can return anything here, I just want to make sure that we know when we've gotten this error ;) 
+
 
 # Now we need to make a checker that will rapidly check to see if the space is live or not so that way we can 
 # Start the recording process.
@@ -142,3 +153,25 @@ def getSpaceInfo(space_id, token):
     rest_id = meta["data"]["audioSpace"]["metadata"]["rest_id"] # Get the Space ID while we're at it too
 
     return title, rest_id
+
+# +-----------------+
+# | TOKEN FUNCTIONS |
+# +-----------------+
+# All The functions from here on out are for auth-token support
+# This way we can monitor an absurd amount of users and bypass guest_token errors. 
+
+# Create a function that can get a space from a profile picture
+# Sometimes the user dosen't tweet about their space and then we can't get the space ID, so we have to use this.
+def isSpace_avatar(user_url, user_id, auth_token):
+    # Define the basics
+    headers = {'Authorization': 'Bearer ' + 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',"cookie": "auth_token="+auth_token+';',}
+    params = {"user_ids": user_id, "only_spaces": "true"}
+    # Try to get a space ID
+    try:
+        avatar_content = requests.get("https://twitter.com/i/api/fleets/v1/avatar_content",params=params, headers=headers,).json()
+        broadcast_id = avatar_content["users"][user_id]["spaces"]["live_content"]["audiospace"]["broadcast_id"]
+        return broadcast_id
+    except KeyError as err:
+        return False
+    except:
+        return False

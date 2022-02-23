@@ -9,7 +9,6 @@ import time
 import os
 
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
-NOTIF_URL = "Your Webhook Url" # Discord Webhook url for the notification
 
 def MakeDirs(Users):
     for User in Users:
