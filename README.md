@@ -50,7 +50,7 @@ Copy the value for the cookie titled 'auth_token'. Do not share it.
 
 ![EditThisCookieEX](https://imgur.com/AVc1r0N.png)
 
-Once you have this valie copied, head over to the same place your config is located and created a new file called 'tokens.txt'.
+Once you have this value copied, head over to the same place your config is located and created a new file called 'tokens.txt'.
 For every account you'd like to use, put the auth token on a new line.
 
 ## Running the program
