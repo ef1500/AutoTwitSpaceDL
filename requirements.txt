@@ -1,11 +1,13 @@
+cachetools==5.0.0
 certifi==2021.10.8
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
 click==8.0.3
 colorama==0.4.4
 idna==3.3
+pip==22.0.3
 pyperclip==1.8.2
 requests==2.27.1
-torrentool==1.1.1
+setuptools==56.0.0
 transfersh-cli==1.1.0
-twspace-dl==2022.2.23.0
+twspace-dl==2022.2.25.2
 urllib3==1.26.8

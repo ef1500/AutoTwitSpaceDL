@@ -13,11 +13,14 @@ import DiscordNotifEngine
 import AutoSpaceEngine
 import AuthEngine as kronii
 import AutoSpaceEngineHandler as Yuzu # Yes I'm using waifu names for imports
+import multiprocessing
+from twspace_dl import Twspace
+from twspace_dl import TwspaceDL
 
 
 #Let's define some important variables
 BASE_PATH = "D:/Spaces/" # Base Directory (MUST END WITH SLASH)
-NOTIF_URL = "Your Webhook Url" # Discord Webhook url for the notification
+NOTIF_URL = "Your Webhook URL" # Discord Webhook url for the notification
 INTERVAL = 5 # The interval for the monitor to sleep (In Seconds)
 
 # First we want to be able to read a file that contains all of the
@@ -37,77 +40,46 @@ def LoadData(file):
 # When that user is no longer live, begin uploading the file to a temporary storage site
 # Once completed, Return the link via webhook (This should be replaced by the autoTorrent program to autoUpload to Holopirates)
 
-
-
-def CheckLive(user, user_id, token):
-    ustr = user[20:]
-    # Here we want to create a function that checks if the specified user is live
-    # If they are live, send a discord notification, if not, then check again
-    # Update: Since I rethought the mechanism for this, the underlying process is located in the AutoSpaceHandler
-    # Update 2: Twitter didn't like me generating guest tokens every 3 seconds so I started getting a rate limit of sorts, so I'll move the
-    # function below and change the args on this function.
-    isSpace = Yuzu.CheckIfSpace(user_id, token)
-    if isSpace == False:
-        return False # Stop here to conserve token requests
-    isLive = Yuzu.CheckIfLive(isSpace, token)
-
-    if isLive == True:
-        spaceInfo = Yuzu.getSpaceInfo(isSpace, token) # Get the information about the twitter space
-
-        #Strings for the embed
-        spaceUrl = "**Space Url:** " + '\n' + 'https://twitter.com/i/spaces/' + spaceInfo[1] + '\n' + '\n'
-        spaceTitleStr = "**Space Title:** " + '\n' + str(spaceInfo[0]) + '\n' + '\n'
-        spaceIDstr = "**Space ID:**" + '\n' + str(spaceInfo[1]) + '\n'
-
-        #Join all of the strings
-        des = ''.join(spaceTitleStr + spaceUrl + spaceIDstr)
-
-        # Now generate the notification
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is hosting a twitter space!", des, ustr, 'https://imgur.com/E2vh4aa.png', ustr)
-        return True
-    else:
-        return False
-
-# Check if a user is live from their avatar (Requires auth token)
-def CheckLive_Avatar(user, user_id, token):
-    ustr = user[20:]
-    isSpace = Yuzu.isSpace_avatar(user, user_id, kronii.GetToken(kronii.LoadTokens(BASE_PATH+'tokens.txt')))
+def CheckLive_(user):
+    isSpace = Yuzu.CheckIfSpace_(user, kronii.GetToken(kronii.LoadTokens(BASE_PATH+'tokens.txt')))
     if isSpace == False:
         return False
-    isLive = Yuzu.CheckIfLive(isSpace, token)
+    if isinstance(isSpace, str) == True:
+        isLive = Yuzu.CheckIfLive_(isSpace)
+        if isLive == True:
+            xSpace = Twspace._metadata(isSpace)
 
-    if isLive == True:
-        spaceInfo = Yuzu.getSpaceInfo(isSpace, token) # Get the information about the twitter space
+            spaceUrl = "**Space Url:** " + '\n' + 'https://twitter.com/i/spaces/'+xSpace['data']['audioSpace']['metadata']["rest_id"] + '\n' + '\n'
 
-        #Strings for the embed
-        spaceUrl = "**Space Url:** " + '\n' + 'https://twitter.com/i/spaces/' + spaceInfo[1] + '\n' + '\n'
-        spaceTitleStr = "**Space Title:** " + '\n' + str(spaceInfo[0]) + '\n' + '\n'
-        spaceIDstr = "**Space ID:**" + '\n' + str(spaceInfo[1]) + '\n'
+            try:
+                spaceTitleStr = "**Space Title:** " + '\n' + xSpace['data']['audioSpace']['metadata']["title"] + '\n' + '\n'
+            except:
+                spaceTitleStr = "**Space Title:** " + '\n' + user[20:] +'\'s'+" Space" + '\n' + '\n'
+            spaceIDstr = "**Space ID:**" + '\n' + xSpace['data']['audioSpace']['metadata']["rest_id"] + '\n'
+            des = ''.join(spaceTitleStr + spaceUrl + spaceIDstr)
 
-        #Join all of the strings
-        des = ''.join(spaceTitleStr + spaceUrl + spaceIDstr)
+            DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", user[20:] + " Is hosting a twitter space!", des, user[20:], 'https://imgur.com/E2vh4aa.png', user[20:])
 
-        # Now generate the notification
-        DiscordNotifEngine.GenerateEmbed(NOTIF_URL, " ", ustr + " Is hosting a twitter space!", des, ustr, 'https://imgur.com/E2vh4aa.png', ustr)
-        return True
-    else:
-        return False
+            return True
+        else:
+            return False
 
 def Monitor(user, path):
-    token = Yuzu.getGuest() # Let's change this so it's now only a one-time process and it's not called all the time.
-    UserID = lambda user : Yuzu.GetUserID(user) # Slap the old function in a lambda, it's nicer that way!
-    isLive = CheckLive(user, UserID(user), token) # Initial Check to define the variable
-
+#    token = Yuzu.getGuest() # Let's change this so it's now only a one-time process and it's not called all the time.
+#    UserID = lambda user : Yuzu.GetUserID(user) # Slap the old function in a lambda, it's nicer that way!
+    space_id = Yuzu.CheckIfSpace_(user, kronii.GetToken(kronii.LoadTokens(BASE_PATH+'tokens.txt')))
+    TwitSpace = TwspaceDL(space_id, format_str="(%(creator_name)s)%(title)s-%(id)s")
+    isLive = CheckLive_(user) # Initial Check to define the variable
      # Now we begin writing the actual monitor of the program
     while isLive != True:
-        isLive = CheckLive(user, UserID(user), token) # Check if the user is live (as always)
-        if isLive == False:
-            isLive = CheckLive_Avatar(user, UserID, token)
+        isLive = CheckLive_(user) # Check if the user is live (as always)
         time.sleep(INTERVAL) # Now Just sleep for the specified interval before doing it again. (Should I use async here because I'm working with threads?)
 
     if isLive == True:
         # Open A Subprocess to begin the downloading process
         monitor = subprocess.Popen("twspace_dl -o [%(creator_screen_name)s_%(id)s]-%(start_date)s -U "+user, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path) #Open the process in the specific directory so that way we don't have any interference when uploading to tempupload.
+        #Monitor = multiprocessing.Process(target=TwitSpace.download, args=(path,))
+        #Monitor.start()
         # Small note - We have to make the twsapce filename weird because if there's hangul, sometimes windows will throw an error and then the downloader will fail to pull through. I've got no idea how to fix this
         # Put the output and error in their own variables (Communicate returns two values.)
         ox, ex = monitor.communicate()
@@ -133,6 +105,7 @@ def AutoUpload(path, user):
     #Str(file) can cause an error to get thrown if the filename isn't supported by windows, and transfersh upload won't occur.
     upload = subprocess.Popen("transfersh "+str(file), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
     oy, ey = upload.communicate()
+    print(oy, ey)
     upload.wait()
     if not ey:
         # Regex The link out
