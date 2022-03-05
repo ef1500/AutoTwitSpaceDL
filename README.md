@@ -39,11 +39,11 @@ Do not worry about the folders shown in the example, they will be created for yo
 ## Adding your discord webhook to the code
 - Copy the URL for your webhook
 - Next, navigate to the location you cloned the repo
-- Open the files "AutoTwitspaceDLX.py" and "AutoSpaceEngine.py" and edit the NOTIF_URL to your discord webhook URL.
+- Open the file "AutoTwitspaceDLX.py" and edit the NOTIF_URL to your discord webhook URL.
 
 ## Adding twitter auth tokens
 In order for the program to work properly and reliably, you must specify an auth token. This will allow you to get space IDs even if the user did not tweet about it, and it will also allow you to monitor exponentially more accounts at once.
-I reccomend that you make two new twitter accounts specifically for this purpose. 
+I reccomend that you make a new account specifically for archiving spaces. 
 ### Getting your auth token
 If you have chrome, use the extension 'EditThisCookie'. It will allow you to easily copy the cookie.
 Copy the value for the cookie titled 'auth_token'. Do not share it.
@@ -51,7 +51,6 @@ Copy the value for the cookie titled 'auth_token'. Do not share it.
 ![EditThisCookieEX](https://imgur.com/AVc1r0N.png)
 
 Once you have this value copied, head over to the same place your config is located and created a new file called 'tokens.txt'.
-For every account you'd like to use, put the auth token on a new line.
 
 ## Running the program
 Once you're ready to go, just open up the python console type
@@ -77,4 +76,5 @@ In the file "DiscordNotifEngine.py", the arguments for the embed are explained s
 - Allow for the Customization of the Author/Footer images and footer text
 - More detailed embeds (With the url embedded!) -- Done!
 - Multiple Webhook support (maybe)
+- Restarting a thread after a space is finished archivng
 - Make a nice looking cli (Maybe) -- In the works!
