@@ -1,10 +1,7 @@
 # Twitter Space Automatic Downloader/Monitor Rewrite
 # Written by ef1500
 # The old one wasn't working and I was getting frustrated with it, so I've decided to wrtite the Whole Damn thing myself, with the help of others. 
-import re
 import json
-import time
-import requests
 import AutoTwitspaceDLX as Yuu
 from twspace_dl import Twspace
 from twspace_dl import twitter
@@ -27,7 +24,6 @@ def CheckIfSpace_(username, auth_token):
             print(s_id)
             return s_id
         except:
-            print(username + " is not live!")
             return False
 
 def CheckIfLive_(space_id):

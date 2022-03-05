@@ -9,7 +9,7 @@ import random
 
 # Create a functions that allows us to load up all of the user tokens and store them in a list that's cached so we can
 # call it efficently later on
-@kaede.lru_cache
+@kaede.lru_cache(maxsize=256)
 def LoadTokens(file):
     with open(file, 'r') as TokenLoader:
         tokens = [line.strip() for line in TokenLoader]
@@ -23,7 +23,7 @@ def GetToken(tokens):
     else:
         return tokens[random.randrange(len(tokens))] # Return a random token
 
-@lru_cache
+@lru_cache(maxsize=256)
 def getGuest(ttl_hash=None):
     del ttl_hash # we're not using this, we're simply gonna use it to exploit the cache to update every hour.
     guestActivate = 'https://api.twitter.com/1.1/guest/activate.json'
